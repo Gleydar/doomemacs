@@ -108,7 +108,24 @@
              (message "Error running command: %s" (mapconcat #'identity cmd-args " "))))
       cmd-buf)))
 
-
+(when (modulep! +lsp)
+  (define-minor-mode +debugger-running-session-mode
+    "A mode for adding keybindings to running sessions"
+      :init-value nil
+      :keymap (make-sparse-keymap)
+      (when (bound-and-true-p evil-mode)
+        (evil-normalize-keymaps))  ; if you use evil, this is necessary to update the keymaps
+      ;; The following code adds to the different termination hooks, depending on dape-terminated-hook so that this minor
+      ;; mode will be deactivated when the debugger finishes
+      (if (modulep! +dape)
+        (when +debugger-running-session-mode
+          )
+      (else (let ((session-at-creation (dap--cur-active-session-or-die)))
+            (add-hook 'dap-terminated-hook
+                  (lambda (session)
+                    (when (eq session session-at-creation)
+                      (+dap-running-session-mode -1)))))))))
+   
 (use-package! dap-mode
   :when (modulep! +lsp)
   :when (modulep! -dape)
@@ -128,48 +145,29 @@
 
   (dap-mode 1)
 
-  (define-minor-mode +dap-running-session-mode
-    "A mode for adding keybindings to running sessions"
-    :init-value nil
-    :keymap (make-sparse-keymap)
-    (when (bound-and-true-p evil-mode)
-      (evil-normalize-keymaps))  ; if you use evil, this is necessary to update the keymaps
-    ;; The following code adds to the dap-terminated-hook so that this minor
-    ;; mode will be deactivated when the debugger finishes
-    (when +dap-running-session-mode
-      (let ((session-at-creation (dap--cur-active-session-or-die)))
-        (add-hook 'dap-terminated-hook
-                  (lambda (session)
-                    (when (eq session session-at-creation)
-                      (+dap-running-session-mode -1)))))))
-
   ;; Activate this minor mode when dap is initialized
-  (add-hook 'dap-session-created-hook #'+dap-running-session-mode)
+  (add-hook 'dap-session-created-hook #'+debugger-running-session-mode)
   ;; Activate this minor mode when hitting a breakpoint in another file
-  (add-hook 'dap-stopped-hook #'+dap-running-session-mode)
+  (add-hook 'dap-stopped-hook #'+debugger-running-session-mode)
   ;; Activate this minor mode when stepping into code in another file
   (add-hook 'dap-stack-frame-changed-hook (lambda (session)
                                             (when (dap--session-running session)
-                                              (+dap-running-session-mode 1))))
-
+                                              (+debugger-running-session-mode 1))))
   (map! :localleader
-        :map +dap-running-session-mode-map
+        :map +debugger-running-session-mode-map
         "d" #'dap-hydra))
-
 
 (use-package! dap-ui
   :when (modulep! +lsp)
+  :when (modulep! -dape)
   :when (modulep! :tools lsp -eglot)
   :hook (dap-mode . dap-ui-mode)
   :hook (dap-ui-mode . dap-ui-controls-mode))
 
 (use-package! dape
   :when (modulep! +dape)
-  :hook
-  ;; Save breakpoints on quit
-  (kill-emacs . dape-breakpoint-save)
-  ;; Load breakpoints on startup
-  (after-init . dape-breakpoint-load)
+  :hook (kill-emacs . dape-breakpoint-save)
+  :hook (after-init . dape-breakpoint-load)
   :config
   ;; Turn on global bindings for setting breakpoints with mouse
   (dape-breakpoint-global-mode)
@@ -185,4 +183,10 @@
   (add-hook 'dape-compile-hook 'kill-buffer)
   ;; Projectile users
   (setq dape-cwd-function 'projectile-project-root)
-)
+  ;; Activate this minor mode when dape is started
+  (add-hook 'dape-start-hook #'+debugger-running-session-mode)
+  ;; Activate this minor mode when hitting a breakpoint in another file
+  (add-hook 'dape-stopped-hook #'+debugger-running-session-mode)
+  (map! :localleader
+    :map +debugger-running-session-mode-map
+    "d" #'dape-hydra))

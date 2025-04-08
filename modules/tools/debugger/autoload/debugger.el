@@ -33,6 +33,12 @@ the debugging configuration of the current buffer."
        (mapcar (lambda (c) (cons 'dap c))
                (apply #'append (mapcar #'funcall dap-launch-configuration-providers)))))
 
+(defun +debugger--list-for-dape ()
+  (and (or (bound-and-true-p lsp-mode)
+           (bound-and-true-p lsp--buffer-deferred))
+        (require 'dape-mode)
+  )
+
 (defun +debugger--list-for-realgud ()
   (mapcar (lambda (c) (cons 'realgud (list (symbol-name c))))
           (cl-loop for (sym . plist) in +debugger--realgud-alist
@@ -50,7 +56,8 @@ Presents both dap and realgud configurations, and returns a list of the form
 infromation."
   (let* ((result (mapcar (lambda (c) (cons (cadr c) c))
                          (append (+debugger--list-for-dap)
-                                 (+debugger--list-for-realgud))))
+                                 (+debugger--list-for-realgud)
+                                 (+debugger--list-for-dape))))
          (completion (completing-read "Start debugger: " (mapcar #'car result) nil t)))
     (if (or (null completion) (string-empty-p completion))
         (user-error "No debugging configuration specified.")
@@ -109,6 +116,8 @@ for what debugger to use. If the prefix ARG is set, prompt anyway."
   (interactive)
   (cond ((and (fboundp 'dap--cur-session) (dap--cur-session))
          (dap-disconnect (dap--cur-session)))
+        ((and (fboundp 'dape-connection) (dape-connection))
+         (dape-quit (dape-connection)))
         ((and (fboundp 'realgud-get-cmdbuf) (realgud-get-cmdbuf))
          (let ((buf (realgud-get-cmdbuf)))
            (ignore-errors
