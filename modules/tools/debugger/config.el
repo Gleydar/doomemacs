@@ -118,8 +118,7 @@
       ;; The following code adds to the different termination hooks, depending on dape-terminated-hook so that this minor
       ;; mode will be deactivated when the debugger finishes
       (if (modulep! +dape)
-        (when +debugger-running-session-mode
-          )
+        (when +debugger-running-session-mode)
       (else (let ((session-at-creation (dap--cur-active-session-or-die)))
             (add-hook 'dap-terminated-hook
                   (lambda (session)
@@ -127,8 +126,7 @@
                       (+dap-running-session-mode -1)))))))))
    
 (use-package! dap-mode
-  :when (modulep! +lsp)
-  :when (modulep! -dape)
+  :when (modulep! +lsp -dape)
   :when (modulep! :tools lsp -eglot)
   :hook (dap-mode . dap-tooltip-mode)
   :init
@@ -158,14 +156,14 @@
         "d" #'dap-hydra))
 
 (use-package! dap-ui
-  :when (modulep! +lsp)
-  :when (modulep! -dape)
+  :when (modulep! +lsp -dape)
   :when (modulep! :tools lsp -eglot)
   :hook (dap-mode . dap-ui-mode)
   :hook (dap-ui-mode . dap-ui-controls-mode))
 
 (use-package! dape
-  :when (modulep! +dape)
+  :when (modulep! +lsp +dape)
+  :when (modulep! :tools lsp)
   :hook (kill-emacs . dape-breakpoint-save)
   :hook (after-init . dape-breakpoint-load)
   :config
