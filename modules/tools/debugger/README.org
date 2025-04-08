@@ -15,6 +15,8 @@ there is still not *enough* documentation for it.
 ** Module flags
 - +lsp ::
   Enable support for [[https://microsoft.github.io/debug-adapter-protocol/][Debug Adapter Protocol]] (DAP) debuggers.
+- +dape ::
+  Use `dape` instead of `dap-mode` to support [[https://microsoft.github.io/debug-adapter-protocol/][Debug Adapter Protocol]] (DAP) debuggers.
 
 ** Packages
 - [[doom-package:realgud]]
@@ -22,6 +24,8 @@ there is still not *enough* documentation for it.
 - if [[doom-module:+lsp]]
   - [[doom-package:dap-mode]] 
   - [[doom-package:posframe]] 
+- if [[doom-module:+dape]]
+  - [[doom-package:dape]] 
 
 ** Hacks
 - Enables ~gdb-many-windows-mode~ in ~gdb-mode~ by default
@@ -61,7 +65,7 @@ and it needs to extract compressed downloaded file.
 You need this if you are having ~"wrong-type-argument stringp nil"~ error when
 calling ~dap-gdb-lldb-setup~. [[github:emacs-lsp/dap-mode/issues/313][See emacs-lsp/dap-mode#313]]
 
-** DAP debuggers
+** DAP debuggers 
 *** dap-cpptools
 - Languages: C, C++, Rust
 - Documentation

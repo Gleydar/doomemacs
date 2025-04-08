@@ -8,3 +8,6 @@
 (when (modulep! +lsp)
   (package! dap-mode :pin "56e92dd86b526c191275cf7813208baad14e0c5d")
   (package! posframe :pin "12f540c9ad5da09673b2bca1132b41f94c134e82"))
+
+(when (modulep! +dape)
+  (package! dape))
